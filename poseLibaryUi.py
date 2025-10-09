@@ -38,11 +38,10 @@ class poseLibaryTool(QtWidgets.QDialog):
 		self.pose_name_enter.setStyleSheet(
 			'''
 			QLineEdit {
-				background-color: ##789fe5;
+				background-color: #3d5f9c;
 				border: 1px solid #ccc;
 				border-radius: 4px;
 				padding: 4px;
-				color: black;
 			}
 			'''
 		)
@@ -78,7 +77,7 @@ class poseLibaryTool(QtWidgets.QDialog):
 		self.prefix_name_enter.setStyleSheet(
 			'''
 			QLineEdit {
-				background-color: ##789fe5;
+				background-color: #abb2d6;
 				border: 1px solid #ccc;
 				border-radius: 4px;
 				padding: 4px;
@@ -93,7 +92,7 @@ class poseLibaryTool(QtWidgets.QDialog):
 		self.suffix_name_enter.setStyleSheet(
 			'''
 			QLineEdit {
-				background-color: ##789fe5;
+				background-color: #aeafe6;
 				border: 1px solid #ccc;
 				border-radius: 4px;
 				padding: 4px;

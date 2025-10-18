@@ -197,20 +197,49 @@ class poseLibaryTool(QtWidgets.QDialog):
 		self.import_img_btn = QtWidgets.QPushButton("IMPORT IMAGE")
 		self.mainLayout.addWidget(self.import_img_btn)
 
+<<<<<<< HEAD
+=======
+		self.import_img_btn.clicked.connect(self.import_image)
+>>>>>>> 71757d7d67d936638092085d5abe6a50dc1c7a6c
 		self.savePose_button.clicked.connect(self.savePose)
 		self.load_button.clicked.connect(self.loadPose)
 
 		self.selected_image_path = None 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 71757d7d67d936638092085d5abe6a50dc1c7a6c
 
 	def savePose(self):
 		poseUtil.savePose(self)
+
+	def import_image(self):
+	# เปิด dialog เลือกรูปภาพ
+	file_path, _ = QtWidgets.QFileDialog.getOpenFileName(
+		self,
+		"เลือกภาพสำหรับ Pose",
+		"",
+		"Image Files (*.png *.jpg *.jpeg *.bmp)"
+	)
+	if file_path:
+		# เก็บ path ไว้เพื่อ save ใน pose library
+		self.selected_image_path = file_path
+		# ถ้ามี item เลือกอยู่ใน list ให้ set icon
+		current_item = self.pose_list.currentItem()
+		if current_item:
+			current_item.setIcon(QtGui.QIcon(file_path))
+
+
 
 	def loadPose(self):
 		poseUtil.loadPose(self)
 
 	def deletePose(self):
+<<<<<<< HEAD
 		poseUtil.deletePose(self)
+=======
+		pass
+>>>>>>> 71757d7d67d936638092085d5abe6a50dc1c7a6c
 
 	def renamePose(self):
 		self.re_dialog = QtWidgets.QDialog(self)
@@ -313,4 +342,8 @@ def run():
 	mayaMainWindow = omui.MQtUtil.mainWindow()
 	ptr = wrapInstance(int(mayaMainWindow), QtWidgets.QWidget)
 	ui = poseLibaryTool(parent=ptr)
+<<<<<<< HEAD
 	ui.show()
+=======
+	ui.show()
+>>>>>>> 71757d7d67d936638092085d5abe6a50dc1c7a6c

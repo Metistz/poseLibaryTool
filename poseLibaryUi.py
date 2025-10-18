@@ -7,7 +7,8 @@ except:
 import maya.OpenMayaUI as omui
 import importlib
 import os
-ROOT_RESOURCE_DIR = 'C:/Users/ICT68/Documents/maya/2025/scripts/poseLibaryTool'
+from . import poseLibaryUtil as poseUtil
+importlib.reload(poseUtil)
 
 class poseLibaryTool(QtWidgets.QDialog):
 	def __init__(self, parent=None):
@@ -21,26 +22,17 @@ class poseLibaryTool(QtWidgets.QDialog):
 		self.mainLayout.setContentsMargins(30, 20, 30, 20)
 		self.mainLayout.setSpacing(15)
 
-
-
 		#ใส่ชื่อpose
 		self.name_layout = QtWidgets.QHBoxLayout()
 		self.mainLayout.addLayout(self.name_layout)
 		self.setStyleSheet("""
-		QDialog {
+		QDialog{
 			background: qlineargradient(
 				x1: 0, y1: 0, x2: 0, y2: 1,
 				stop: 0 #060e1f, stop:0.5 #344483, stop: 1 #344483
 			);
-			self.imagePixmap = QtGui.QPixmap(f"{ROOT_RESOURCE_DIR}/image.jpg")
-			background-repeat: no-repeat;
-			background-position: center;
-			background-origin: content;
-			}
+		}
 		""")
-
-
-
 
 		self.pose_name_enter = QtWidgets.QLineEdit()
 		self.pose_name_enter.setPlaceholderText("Enter pose name")
@@ -55,7 +47,6 @@ class poseLibaryTool(QtWidgets.QDialog):
 			}
 			'''
 		)
-
 
 		self.savePose_button = QtWidgets.QPushButton("SAVE POSE")
 		self.savePose_button.setStyleSheet(
@@ -98,7 +89,6 @@ class poseLibaryTool(QtWidgets.QDialog):
 			'''
 		)
 
-
 		self.suffix_name_enter = QtWidgets.QLineEdit()
 		self.suffix_name_enter.setPlaceholderText("Suffix...")
 		self.suffix_name_enter.setStyleSheet(
@@ -113,7 +103,6 @@ class poseLibaryTool(QtWidgets.QDialog):
 			'''
 		)
 
-		
 		self.preSufLayout.addWidget(self.prefix_name_enter)
 		self.preSufLayout.addWidget(self.suffix_name_enter)
 
@@ -199,9 +188,40 @@ class poseLibaryTool(QtWidgets.QDialog):
 			'''
 		)
 
+		# List widget แสดง pose (scrollable โดยอัตโนมัติ)
+		self.pose_list.setIconSize(QtCore.QSize(80, 80))
+		self.pose_list.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+		self.pose_list.setVerticalScrollMode(QtWidgets.QAbstractItemView.ScrollPerPixel)
+
+		self.import_img_btn = QtWidgets.QPushButton("IMPORT IMAGE")
+		self.mainLayout.addWidget(self.import_img_btn)
+
+		self.import_img_btn.clicked.connect(self.import_image)
+		self.savePose_button.clicked.connect(self.savePose)
+		self.load_button.clicked.connect(self.loadPose)
+
+		self.selected_image_path = None 
 
 	def savePose(self):
 		pass
+
+	def import_image(self):
+	# เปิด dialog เลือกรูปภาพ
+	file_path, _ = QtWidgets.QFileDialog.getOpenFileName(
+		self,
+		"เลือกภาพสำหรับ Pose",
+		"",
+		"Image Files (*.png *.jpg *.jpeg *.bmp)"
+	)
+	if file_path:
+		# เก็บ path ไว้เพื่อ save ใน pose library
+		self.selected_image_path = file_path
+		# ถ้ามี item เลือกอยู่ใน list ให้ set icon
+		current_item = self.pose_list.currentItem()
+		if current_item:
+			current_item.setIcon(QtGui.QIcon(file_path))
+
+
 
 	def loadPose(self):
 		pass
@@ -295,8 +315,6 @@ class poseLibaryTool(QtWidgets.QDialog):
 				}
 			'''
 		)
-
-
 
 		self.re_dialog.exec_()
 

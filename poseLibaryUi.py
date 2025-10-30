@@ -1,3 +1,4 @@
+
 try:
 	from PySide6 import QtCore, QtGui, QtWidgets
 	from shiboken6 import wrapInstance
@@ -15,8 +16,10 @@ class poseLibaryTool(QtWidgets.QDialog):
 	def __init__(self, parent=None):
 		super().__init__(parent)
 
+		self.pose_library = {}
+
 		self.setWindowTitle('POSE LIBARY')
-		self.resize(500,400)
+		self.resize(600,500)
 
 		self.mainLayout = QtWidgets.QVBoxLayout()
 		self.setLayout(self.mainLayout)
@@ -120,7 +123,6 @@ class poseLibaryTool(QtWidgets.QDialog):
 
 		self.load_button = QtWidgets.QPushButton('LOAD POSE')
 		self.button_layout.addWidget(self.load_button)
-		self.load_button.clicked.connect(self.loadPose)
 		self.load_button.setStyleSheet(
 			'''
 				QPushButton {
@@ -189,13 +191,49 @@ class poseLibaryTool(QtWidgets.QDialog):
 			'''
 		)
 
-		# List widget แสดง pose (scrollable โดยอัตโนมัติ)
-		self.pose_list.setIconSize(QtCore.QSize(80, 80))
+		# scrollable 
+		self.pose_list.setIconSize(QtCore.QSize(150,150))
+		self.pose_list.setGridSize(QtCore.QSize(160, 180))  
+		self.pose_list.setResizeMode(QtWidgets.QListView.Adjust)
+		self.pose_list.setViewMode(QtWidgets.QListView.IconMode)  
+		self.pose_list.setMovement(QtWidgets.QListView.Static)    
 		self.pose_list.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
 		self.pose_list.setVerticalScrollMode(QtWidgets.QAbstractItemView.ScrollPerPixel)
+		self.pose_list.setStyleSheet('''
+			QListWidget {
+				background-color: #f7eac1;
+				color: #2a2a57;   
+				font-size: 10pt;
+				font-family: "Arial";
+			}
+			QListWidget::item:selected {
+				background-color: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #CD2C58, stop:0.5 #E06B80, stop:1 #FFC69D);
+				color: #fff5d9;
+			}
+		''')
 
 		self.import_img_btn = QtWidgets.QPushButton("IMPORT IMAGE")
 		self.mainLayout.addWidget(self.import_img_btn)
+		self.import_img_btn.setStyleSheet(
+			'''
+				QPushButton {
+					background-color:  qlineargradient(x1:0, y1:0, x2:1, y2:0,
+					stop:0 #feb852, stop:0.5 #917cb6, stop:1 #789fe5);
+					border-radius: 10px;
+					font-size: 12px;
+					font-family: Arial;
+					color: black;
+					padding: 8px;
+					font-weight: bold;
+				}
+				QPushButton:hover {
+					background-color: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #6d597a, stop:0.5 #e56b6f, stop:1 #eaac8b);
+				}
+				QPushButton:pressed {
+					background-color: white;
+				}
+			'''
+		)
 
 		self.import_img_btn.clicked.connect(self.import_image)
 
@@ -203,124 +241,88 @@ class poseLibaryTool(QtWidgets.QDialog):
 		self.load_button.clicked.connect(self.loadPose)
 
 		self.selected_image_path = None 
-		
+
 	def savePose(self):
-		poseUtil.savePose(self)
+		poseUtil.save_pose(self)
 
 
 	def import_image(self):
-		# เปิด dialog เลือกรูปภาพ
 		file_path, _ = QtWidgets.QFileDialog.getOpenFileName(
 			self,
-			"เลือกภาพสำหรับ Pose",
+			"select Picture",
 			"",
 			"Image Files (*.png *.jpg *.jpeg *.bmp)"
 		)
 		if file_path:
-			# เก็บ path ไว้เพื่อ save ใน pose library
 			self.selected_image_path = file_path
-			# ถ้ามี item เลือกอยู่ใน list ให้ set icon
 			current_item = self.pose_list.currentItem()
 			if current_item:
-				current_item.setIcon(QtGui.QIcon(file_path))
-
-
-
+				pixmap = QtGui.QPixmap(file_path)
+				icon = QtGui.QIcon(pixmap.scaled(150, 150, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation))
+				current_item.setIcon(icon)
+				current_item.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignBottom)
 
 	def loadPose(self):
-		poseUtil.loadPose(self)
+		poseUtil.load_pose(self)
 
 	def deletePose(self):
-		poseUtil.deletePose(self)
+		poseUtil.delete_pose(self)
 
 	def renamePose(self):
-		self.re_dialog = QtWidgets.QDialog(self)
-		self.re_dialog.setWindowTitle("RENAME POSE")
-		self.re_dialog.resize(250, 140)
+		item = self.pose_list.currentItem()
+		if not item:
+			cmds.warning("Please select a pose to rename.")
+			return
 
-		self.re_layout = QtWidgets.QVBoxLayout(self.re_dialog)
+		old_name = item.text()
 
-		self.re_lineEdit = QtWidgets.QLineEdit()
-		self.re_lineEdit.setPlaceholderText("Enter new pose name...")
-		self.re_layout.addWidget(self.re_lineEdit)
+		re_dialog = QtWidgets.QDialog(self)
+		re_dialog.setWindowTitle("RENAME POSE")
+		re_dialog.resize(250, 140)
+
+		re_layout = QtWidgets.QVBoxLayout(re_dialog)
+
+		re_lineEdit = QtWidgets.QLineEdit()
+		re_lineEdit.setPlaceholderText(f"Enter new name for '{old_name}'")
+		re_layout.addWidget(re_lineEdit)
 
 		button_layout = QtWidgets.QHBoxLayout()
+		confirm_rename_btn = QtWidgets.QPushButton("RENAME")
+		cancel_button = QtWidgets.QPushButton("CANCEL")
 
-		self.rename_button = QtWidgets.QPushButton("RENAME")
-		self.cancel_button = QtWidgets.QPushButton("CANCEL")
+		button_layout.addWidget(confirm_rename_btn)
+		button_layout.addWidget(cancel_button)
+		re_layout.addLayout(button_layout)
 
-		button_layout.addWidget(self.rename_button)
-		button_layout.addWidget(self.cancel_button)
+		def confirmRename():
+			new_name = re_lineEdit.text().strip()
+			if not new_name:
+				cmds.warning("Please enter a new pose name.")
+				return
 
-		self.re_layout.addLayout(button_layout)
+			if new_name in self.pose_library and new_name != old_name:
+				QtWidgets.QMessageBox.warning(
+					self,
+					"Duplicate Name",
+					f"Pose '{new_name}' already exists!"
+				)
+				return
 
-		self.re_dialog.setStyleSheet("""
-			QDialog {
-				background: qlineargradient(
-					x1: 0, y1: 0, x2: 1, y2: 1,
-					stop: 0 #282443,
-					stop: 0.5 #2d276f,
-					stop: 1 #344483
-				);
-				border: 2px solid #917cb6;
-				border-radius: 12px;
-			}
+			self.pose_library[new_name] = self.pose_library.pop(old_name)
 
-			QLineEdit {
-				background-color: #ece2d6;
-				border-radius: 6px;
-				padding: 6px;
-				font-family: "Segoe UI";
-				font-size: 14px;
-				color: black;
-			}
+			item.setText(new_name)
+			re_dialog.close()
 
-		""")
+			cmds.inViewMessage(
+				amg=f"Pose renamed to <hl>{new_name}</hl>",
+				pos="midCenter",
+				fade=True
+			)
 
-		self.rename_button.setStyleSheet(
-			'''
-				QPushButton {
-					background-color:  qlineargradient(x1:0, y1:0, x2:1, y2:0,
-					stop:0 #e7c6ff, stop:0.5 #c8b6ff, stop:1 #bbd0ff);
-					border-radius: 10px;
-					font-size: 12px;
-					font-family: Arial;
-					color: black;
-					padding: 8px;
-					font-weight: bold;
-				}
-				QPushButton:hover {
-					background-color: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #f8ad9d, stop:0.5 #fbc4ab, stop:1 #ffdab9);
-				}
-				QPushButton:pressed {
-					background-color: black;
-					color: white;
-				}
-			'''
-		)
-		self.cancel_button.setStyleSheet(
-			'''
-				QPushButton {
-					background-color:  qlineargradient(x1:0, y1:0, x2:1, y2:0,
-					stop:0 #ff86c8, stop:0.5 #ffa3a5, stop:1 #bbd0ff);
-					border-radius: 10px;
-					font-size: 12px;
-					font-family: Arial;
-					color: black;
-					padding: 8px;
-					font-weight: bold;
-				}
-				QPushButton:hover {
-					background-color: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #f8ad9d, stop:0.5 #fbc4ab, stop:1 #ffdab9);
-				}
-				QPushButton:pressed {
-					background-color: black;
-					color: white;
-				}
-			'''
-		)
+		confirm_rename_btn.clicked.connect(confirmRename)
+		cancel_button.clicked.connect(re_dialog.close)
 
-		self.re_dialog.exec_()
+		re_dialog.exec_()
 
 
 def run():
